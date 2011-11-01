@@ -14,13 +14,20 @@ class BiGraph(Graph):
             self.vertex_name[self.vertex(i)]='A'+str(i)
         for i in range(self.num_A,2*self.num_A):
             self.vertex_name[self.vertex(i)]='B'+str(i-self.num_A)
-        
     def permute(self,P):
-        B=BiGraph()
-        B.num_A=self.num_A
-        B.add_vertex(self.num_vertices())
-        for i,j in self.vertices():#assume i is in A and j is in B
-            pass
+        B=BiGraph(self.num_A,self.num_vertices())
+        for i,j in self.edges():#assume i is in A and j is in B
+            B.add_edge(B.vertex(i),B.vertex(P[int(j)-self.num_A]+self.num_A))
+        return B
+    def contract(self):
+        """contract by the perfect matching i->i+num_A,assume it exsits"""
+        D=Graph()
+        D.add_vertex(self.num_A)
+        for i,j in self.edges():
+            if int(j)-int(i)!=self.num_A:
+                D.add_edge(D.vertex(i),D.vertex(int(j)-self.num_A))
+        return D
+
 def graph_to_bigraph(G):
     B=BiGraph(G.num_vertices(),2*G.num_vertices())
     for i,j in G.edges():
@@ -35,9 +42,10 @@ def bipartite_pfaffian(G):
     for i in range(G.num_A):
         for e in G.vertex(i).out_edges():
             if M[e]:
-                permutation[i]=int(e.target())
+                permutation[int(e.target())-G.num_A]=i
                 break
         else:
             print "No perfect mathing"
             return False
-    return permutation
+    D=G.permute(permutation).contract()
+    return D
