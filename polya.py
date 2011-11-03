@@ -37,6 +37,8 @@ def graph_to_bigraph(G):
     
 def bipartite_pfaffian(G):
     """Check if bipartite graph G has a Pfaffian orientation"""
+
+    #check having perfect matching or not
     M,_=max_cardinality_matching(G)
     permutation=range(G.num_A)
     for i in range(G.num_A):
@@ -47,5 +49,13 @@ def bipartite_pfaffian(G):
         else:
             print "No perfect mathing"
             return False
+    #contract by perfectiong matching
     D=G.permute(permutation).contract()
+    #reduce to 1-connented digraph
+    C,hist=label_components(D,directed=True)
+    if hist.size>1:
+        for i,j in D.edges():
+            if C[i]!=C[j]
+                D.remove_edge(i,j)
+    #reduce to 2-connected digraph
     return D
