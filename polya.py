@@ -1,4 +1,6 @@
-from graph_tool.all import *
+from graph_tool import Graph
+from graph_tool.flow import max_cardinality_matching
+from graph_tool.topology import label_components
 class BiGraph(Graph):
     def __init__(self):
         """Number of vertices in color class A."""
@@ -55,7 +57,7 @@ def bipartite_pfaffian(G):
     C,hist=label_components(D,directed=True)
     if hist.size>1:
         for i,j in D.edges():
-            if C[i]!=C[j]
+            if C[i]!=C[j]:
                 D.remove_edge(i,j)
     #reduce to 2-connected digraph
     return D

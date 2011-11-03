@@ -1,6 +1,5 @@
 import scipy.io
 from polya import *
-from graph_tool.all import *
 from util import *
 F30=scipy.io.loadmat('../matrix/F30.mat')['F30']
 G=sparse_to_graph(F30)
