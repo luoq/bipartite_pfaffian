@@ -5,7 +5,6 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //=======================================================================
-#include <boost/config.hpp>
 #include <iostream>
 #include <fstream>
 
@@ -19,7 +18,7 @@ int
 main(int, char *[])
 {
   typedef adjacency_list < listS, vecS, directedS,
-    no_property, property < edge_weight_t, int > > graph_t;
+    no_property, property < edge_weight_t, double > > graph_t;
   typedef graph_traits < graph_t >::vertex_descriptor vertex_descriptor;
   typedef graph_traits < graph_t >::edge_descriptor edge_descriptor;
   typedef std::pair<int, int> Edge;
@@ -30,7 +29,7 @@ main(int, char *[])
   Edge edge_array[] = { Edge(A, C), Edge(B, B), Edge(B, D), Edge(B, E),
     Edge(C, B), Edge(C, D), Edge(D, E), Edge(E, A), Edge(E, B)
   };
-  int weights[] = { 1, 2, 1, 2, 7, 3, 1, 1, 1 };
+  double weights[] = { 1.2, 2.4, 1.5, 2.3, 7.5, 3.0, 1.0, 1.1, 1.2 };
   int num_arcs = sizeof(edge_array) / sizeof(Edge);
 #if defined(BOOST_MSVC) && BOOST_MSVC <= 1300
   graph_t g(num_nodes);
@@ -44,8 +43,8 @@ main(int, char *[])
   graph_t g(edge_array, edge_array + num_arcs, weights, num_nodes);
   property_map<graph_t, edge_weight_t>::type weightmap = get(edge_weight, g);
 #endif
-  std::vector<vertex_descriptor> p(num_vertices(g));
-  std::vector<int> d(num_vertices(g));
+  vertex_descriptor* p=new vertex_descriptor[num_vertices(g)];
+  double* d=new double[num_vertices(g)];
   vertex_descriptor s = vertex(A, g);
 
 #if defined(BOOST_MSVC) && BOOST_MSVC <= 1300
@@ -56,7 +55,7 @@ main(int, char *[])
                           (std::numeric_limits<int>::max)(), 0,
                           default_dijkstra_visitor());
 #else
-  dijkstra_shortest_paths(g, s, predecessor_map(&p[0]).distance_map(&d[0]));
+  dijkstra_shortest_paths(g, s, distance_inf(1000.0).predecessor_map(p).distance_map(d));
 #endif
 
   std::cout << "distances and parents:" << std::endl;
