@@ -5,6 +5,7 @@ function pf=planar_pfaffian(G)
 
 global em pf
 
+G=remove_diagonal_sp(G);
 [is_planar,~,em]=boyer_myrvold_planarity_test(G);
 if(~is_planar)
     error('only planar graph G is accepted');
