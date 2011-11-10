@@ -16,6 +16,8 @@ while condition
     valid=find(~isolated);
     remove=isolated;
     if(~isempty(valid))
+        valid_degree=degree(valid);
+        valid=valid(valid_degree==min(valid_degree));
         u=valid(randi(length(valid),1));
         neighbour=find(G(:,u));
         v=neighbour(randi(length(neighbour),1));
