@@ -38,8 +38,76 @@ else % divide and combine multi strong connected digraph
 end
 
 %% recover from contracted graph
-pf=pf-speye(n);% edges of M has weight -1
-pf(:,M)=pf;
+% pf=pf-speye(n);% edges of M has weight -1
+% pf(:,M)=pf;
+end
 
 function pf=pfaffian1(A)
+% convert problem of 1-strongly-connected graph to 2-strongly-connected graph
+n=size(A,1);
+pf=pfaffian1_helper(A,true(1,n));
+end
+
+function pf=pfaffian1_helper(A,not_checked)
+n=size(A,1);
+v=find(not_checked,1);
+% already 2-strongly-connected
+if(isempty(v))
+    pf=pfaffian2(A);
+    return
+end
+not_checked(v)=false;
+Am=minor(A,v);
+[c,sizes]=components(Am);
+l=length(sizes);
+if l>1 % handle reducing case
+    % build components mapping
+    [~,partition]=sort(c);
+    mask=(partition>=v);%leave index v for v
+    partition(mask)=partition(mask)+1;
+    
+    pfs=cell(1,l);
+    cross_weight1=zeros(n,1);
+    cross_weight2=zeros(n,1);
+    first=1;
+    for i=1:l
+        last=first+sizes(i)-1;
+        % build up submatrix mask
+        mask=false(n,1);mask(partition(first:last))=true;
+        Internal=A(mask,mask);
+        Interaction=A(~mask,~mask);
+        % build up subgraph
+        A2=[Internal sum(Interaction,2)>0;sum(Interaction,1)>0 0];
+        pfs{i}=pfaffian1_helper(A2,not_checked(mask));
+        % save cross vertices info
+        cross_weight1(mask)=pfs{i}(end,1:end-1);
+        cross_weight2(mask)=pfs{i}(1:end-1,end);
+        pfs{i}=pfs{i}(1:end-1,1:end-1);
+        first=last+1;
+    end
+    %% restore original weights
+    pf=blkdiag(pfs{:},0);
+    partition=[partition v];% add v in permutation
+    pf(partition,partition)=pf;
+    pf(v,:)=cross_weight1.*A(v,:);
+    pf(:,v)=cross_weight2.*A(:,v);
+    % weighting cross edges
+    map=[c(1:v-1) 0 c(v:end)];
+    [I J]=find(A);
+    mask=((map(I)~=map(J)) & (map(I)~=0) & (map(J)~=0));
+    I=I(mask);J=J(mask);
+    V=-cross_weight1(I).*cross_weight1(J);
+    pf=pf+sparse(I,J,V,n,n);
+else % handle non reducing case
+    pf=pfaffian1_helper(A,not_checked);
+end
+end
+
+function pf=pfaffian2(A)
+% handle 2-strongly-connected graph
 pf=A;
+end
+
+function A=minor(A,i)
+A(i,:)=[];A(:,i)=[];
+end
