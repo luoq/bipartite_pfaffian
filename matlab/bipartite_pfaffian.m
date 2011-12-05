@@ -18,6 +18,9 @@ A=remove_diagonal_sp(A(:,M)); % contract along M
 [c sizes]=components(A);
 if length(sizes)==1
     pf=pfaffian1(A);
+    if isempty(pf)
+        return
+    end
 else % divide and combine multi strong connected digraph
     [~,partition]=sort(c);
     first=1;
@@ -27,8 +30,8 @@ else % divide and combine multi strong connected digraph
         last=first+sizes(i)-1;
         A1=A(partition(first:last),partition(first:last));
         pfs{i}=pfaffian1(A1);
-        if pfs{i}==false
-            pf=false;
+        if isempty(pfs{i})
+            pf=[];
             return
         end
         first=last+1;
@@ -78,6 +81,10 @@ if l>1 % handle reducing case
         % build up subgraph
         A2=[Internal sum(A(mask,~mask),2)>0;sum(A(~mask,mask),1)>0 0];
         pfs{i}=pfaffian1_helper(A2,not_checked(mask | sparse(v,1,true,n,1)));
+        if(isempty(pfs{i}))
+            pf=[];
+            return
+        end
         % save cross vertices info
         cross_weight1(mask)=pfs{i}(end,1:end-1);
         cross_weight2(mask)=pfs{i}(1:end-1,end);
@@ -108,9 +115,13 @@ global Heawood
 A=A+speye(size(A,1));
 B=biadjacency_to_adjacency(A);
 n=size(A,1);
-if 2*n<=4 % B must be planar
-     [~,~,em]=boyer_myrvold_planarity_test(B);
-     pf=planar_pfaffian(B,em);
+if n>=3 && nnz(A)>2*(2*n)-4
+    disp('No possible pfaffian orientation')
+    pf=[];
+    return
+elseif 2*n<=4 % B must be planar
+     [~,~,embedding]=boyer_myrvold_planarity_test(B);
+     pf=planar_pfaffian(B,embedding);
      pf=pf(1:n,n+1:2*n);
 elseif n==7 && nnz(A)==21 && ...
         graphisomorphism(B,biadjacency_to_adjacency(Heawood),'Directed',false)
