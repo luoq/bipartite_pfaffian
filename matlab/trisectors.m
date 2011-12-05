@@ -7,12 +7,24 @@ for i=1:n
             G1=minor(G,[i j k]);
             [c,sizes]=components(G1);
             len=length(sizes);
-            if len>=3
+            if len>=4
                 T=[T;[repmat([i j k],n-k,1),(k+1:n)']];
+            elseif len==3 % pay attention to component with single vertex
+                single=(sizes==1);
+                temp=(k+1:n);
+                temp=temp(~single(c(temp-3)));
+                if ~isempty(temp)
+                    T=[T;[repmat([i j k],length(temp),1),temp']];
+                end
             elseif len==2
-                for s=1:len
+                nonsingule=find(sizes>1);
+                if isempty(nonsingule)
+                    continue
+                end
+                for s=nonsingule'
                     mask=(c==s);
                     a=biconnected_components(G1(mask,mask));
+                    temp=find(mask);a=temp(a);
                     a=a(a>k-3);
                     if ~isempty(a)
                         T=[T;[repmat([i,j,k],length(a),1) a+3]];
