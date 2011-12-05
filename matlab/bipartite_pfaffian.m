@@ -109,17 +109,15 @@ A=A+speye(size(A,1));
 B=biadjacency_to_adjacency(A);
 n=size(A,1);
 if 2*n<=4 % B must be planar
-    [~,~,em]=boyer_myrvold_planarity_test(B);
-    pf=planar_pfaffian(B,em);
-    pf=pf(1:n,n+1:2*n);
-elseif n==7 && nnz(A)==21
-    error('isomorphism with Heawood should be checked')
+     [~,~,em]=boyer_myrvold_planarity_test(B);
+     pf=planar_pfaffian(B,em);
+     pf=pf(1:n,n+1:2*n);
+elseif n==7 && nnz(A)==21 && ...
+        graphisomorphism(B,biadjacency_to_adjacency(Heawood),'Directed',false)
+    pf=-A;
+    return
 else
    pf=A;     
 end
 pf=-diag(diag(pf))*pf;
-end
-
-function A=minor(A,i)
-A(i,:)=[];A(:,i)=[];
 end
