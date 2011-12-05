@@ -39,7 +39,7 @@ end
 
 %% recover from contracted graph
 % pf=pf-speye(n);% edges of M has weight -1
-% pf(:,M)=pf;
+pf(:,M)=pf;
 end
 
 function pf=pfaffian1(A)
@@ -75,10 +75,9 @@ if l>1 % handle reducing case
         % build up submatrix mask
         mask=false(n,1);mask(partition(first:last))=true;
         Internal=A(mask,mask);
-        Interaction=A(~mask,~mask);
         % build up subgraph
-        A2=[Internal sum(Interaction,2)>0;sum(Interaction,1)>0 0];
-        pfs{i}=pfaffian1_helper(A2,not_checked(mask));
+        A2=[Internal sum(A(mask,~mask),2)>0;sum(A(~mask,mask),1)>0 0];
+        pfs{i}=pfaffian1_helper(A2,not_checked(mask | sparse(v,1,true,n,1)));
         % save cross vertices info
         cross_weight1(mask)=pfs{i}(end,1:end-1);
         cross_weight2(mask)=pfs{i}(1:end-1,end);
@@ -87,12 +86,12 @@ if l>1 % handle reducing case
     end
     %% restore original weights
     pf=blkdiag(pfs{:},0);
-    partition=[partition v];% add v in permutation
+    partition=[partition;v];% add v in permutation
     pf(partition,partition)=pf;
-    pf(v,:)=cross_weight1.*A(v,:);
+    pf(v,:)=cross_weight1'.*A(v,:);
     pf(:,v)=cross_weight2.*A(:,v);
     % weighting cross edges
-    map=[c(1:v-1) 0 c(v:end)];
+    map=[c(1:v-1);0;c(v:end)];
     [I J]=find(A);
     mask=((map(I)~=map(J)) & (map(I)~=0) & (map(J)~=0));
     I=I(mask);J=J(mask);
@@ -105,7 +104,17 @@ end
 
 function pf=pfaffian2(A)
 % handle 2-strongly-connected graph
-pf=A;
+A=A+speye(size(A,1));
+B=biadjacency_to_adjacency(A);
+n=size(A,1);
+if 2*n<=4 % B must be planar
+    [~,~,em]=boyer_myrvold_planarity_test(B);
+    pf=planar_pfaffian(B,em);
+    pf=pf(1:n,n+1:2*n);
+else
+    pf=A;
+end
+pf=-diag(diag(pf))*pf;
 end
 
 function A=minor(A,i)

@@ -1,4 +1,4 @@
-function pf=planar_pfaffian(G)
+function pf=planar_pfaffian(G,em)
 % pf=planar_pfaffian(G)
 % implement the FKT algorithm (named after Fisher, Kasteleyn, and Temperley)
 % G must be connected planar graph and with no vertex of degree 1
@@ -6,9 +6,11 @@ function pf=planar_pfaffian(G)
 global em pf
 
 G=remove_diagonal_sp(G);
-[is_planar,~,em]=boyer_myrvold_planarity_test(G);
-if(~is_planar)
-    error('only planar graph G is accepted');
+if nargin==1
+    [is_planar,~,em]=boyer_myrvold_planarity_test(G);
+    if(~is_planar)
+        error('only planar graph G is accepted');
+    end
 end
 
 pf=2*G;% 2 means the orientation is not determined
