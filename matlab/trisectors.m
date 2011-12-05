@@ -25,14 +25,14 @@ for i=1:n
                     mask=(c==s);
                     a=biconnected_components(G1(mask,mask));
                     temp=find(mask);a=temp(a);
-                    a=sort(a(a>k-3));
+                    a=a(a>k-3);
                     if ~isempty(a)
                         T=[T;[repmat([i,j,k],length(a),1) a+3]];
                     end
                 end
             else %len==1
                 [a C]=biconnected_components(G1);
-                a=sort(a(a>k-3));
+                a=a(a>k-3);
                 if ~isempty(a)
                     for l=a'
                         neighbor=C(l,:);

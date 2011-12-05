@@ -12,7 +12,7 @@ G(1:4,5:end)=repmat(G0(X,Y),1,3);
 G(5:end,1:4)=repmat(G0(Y,X),3,1);
 T1=trisectors(G);
 T2=trisectors_brute(G);
-if ~all(all(T1==T2))
+if ~isempty(setdiff(T1,T2,'rows'))
     error('trisectors fail!')
 end
 disp('trisectors :-)');
