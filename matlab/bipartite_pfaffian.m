@@ -103,6 +103,7 @@ end
 end
 
 function pf=pfaffian2(A)
+global Heawood
 % handle 2-strongly-connected graph
 A=A+speye(size(A,1));
 B=biadjacency_to_adjacency(A);
@@ -111,8 +112,10 @@ if 2*n<=4 % B must be planar
     [~,~,em]=boyer_myrvold_planarity_test(B);
     pf=planar_pfaffian(B,em);
     pf=pf(1:n,n+1:2*n);
+elseif n==7 && nnz(A)==21
+    error('isomorphism with Heawood should be checked')
 else
-    pf=A;
+   pf=A;     
 end
 pf=-diag(diag(pf))*pf;
 end
