@@ -96,6 +96,7 @@ if l>1 % handle reducing case
     pf(partition,partition)=pf;
     pf(v,:)=cross_weight1'.*A(v,:);% edges from v
     pf(:,v)=cross_weight2.*A(:,v);% edges to v
+    pf(v,v)=-1;% edges in perfect matching always get -1
     % weighting cross edges
     map=[c(1:v-1);0;c(v:end)];
     [I J]=find(A);
