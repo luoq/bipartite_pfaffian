@@ -9,7 +9,7 @@ G=remove_diagonal_sp(G);
 if nargin==1
     [is_planar,~,em]=boyer_myrvold_planarity_test(G);
     if(~is_planar)
-        error('only planar graph G is accepted');
+        error('only planar graph is accepted');
     end
 else
     em=em0;

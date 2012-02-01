@@ -16,7 +16,8 @@ A=remove_diagonal_sp(A(:,M)); % contract along M
 
 %% convert to strong connected digraph
 [c sizes]=components(A);
-if length(sizes)==1
+l=length(sizes);
+if l==1
     pf=pfaffian1(A);
     if isempty(pf)
         return
@@ -24,7 +25,6 @@ if length(sizes)==1
 else % divide and combine multi strong connected digraph
     [~,partition]=sort(c);
     first=1;
-    l=length(sizes);
     pfs=cell(1,l);
     for i=1:l
         last=first+sizes(i)-1;
@@ -69,8 +69,8 @@ if l>1 % handle reducing case
     partition(mask)=partition(mask)+1;
     
     pfs=cell(1,l);
-    cross_weight1=zeros(n,1);
-    cross_weight2=zeros(n,1);
+    weight1=zeros(n,1);
+    weight2=zeros(n,1);
     first=1;
     for i=1:l
         last=first+sizes(i)-1;
@@ -85,8 +85,10 @@ if l>1 % handle reducing case
             return
         end
         % save cross vertices info
-        cross_weight1(mask)=pfs{i}(end,1:end-1);
-        cross_weight2(mask)=pfs{i}(1:end-1,end);
+        % NOTE:weight1 and weight1 are dependent.In fact
+        % weight1(v)=-weight2(v),if both values are recorded,
+        weight1(mask)=pfs{i}(end,1:end-1);
+        weight2(mask)=pfs{i}(1:end-1,end);
         pfs{i}=pfs{i}(1:end-1,1:end-1);
         first=last+1;
     end
@@ -94,15 +96,17 @@ if l>1 % handle reducing case
     pf=blkdiag(pfs{:},0);
     partition=[partition;v];% add v in permutation
     pf(partition,partition)=pf;
-    pf(v,:)=cross_weight1'.*A(v,:);% edges from v
-    pf(:,v)=cross_weight2.*A(:,v);% edges to v
+    pf(v,:)=weight1'.*A(v,:);% edges from v,not hard to see the value recored
+    pf(:,v)=weight2.*A(:,v);% edges to v,not hard to see the value recored
     pf(v,v)=-1;% edges in perfect matching always get -1
     % weighting cross edges
     map=[c(1:v-1);0;c(v:end)];
     [I J]=find(A);
     mask=((map(I)~=map(J)) & (map(I)~=0) & (map(J)~=0));
     I=I(mask);J=J(mask);
-    V=-cross_weight1(I).*cross_weight2(J);
+    % It's easy to see for cross edge (u,v),weight2(u) and weight1(v) must
+    % be recorded before.But the reverse is not true.
+    V=-weight1(J).*weight2(I);
     pf=pf+sparse(I,J,V,n,n);
 else % handle non reducing case
     pf=pfaffian1_helper(A,not_checked);

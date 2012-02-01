@@ -1,6 +1,6 @@
 function check
 check_planar_pfaffian
-% check_trisectors
+check_trisectors
 
 function check_trisectors
 G0=grid_graph(3,3);
