@@ -41,7 +41,6 @@ else % divide and combine multi strong connected digraph
 end
 
 %% recover from contracted graph
-% pf=pf-speye(n);% edges of M has weight -1
 pf(:,M)=pf;
 end
 
@@ -80,7 +79,7 @@ if l>1 % handle reducing case
         Internal=A(mask,mask);
         % build up subgraph
         A2=[Internal sum(A(mask,~mask),2)>0;sum(A(~mask,mask),1)>0 0];
-        pfs{i}=pfaffian1_helper(A2,not_checked(mask | sparse(v,1,true,n,1)));
+        pfs{i}=pfaffian1_helper(A2,[not_checked(mask) false]);
         if(isempty(pfs{i}))
             pf=[];
             return
@@ -95,14 +94,14 @@ if l>1 % handle reducing case
     pf=blkdiag(pfs{:},0);
     partition=[partition;v];% add v in permutation
     pf(partition,partition)=pf;
-    pf(v,:)=cross_weight1'.*A(v,:);
-    pf(:,v)=cross_weight2.*A(:,v);
+    pf(v,:)=cross_weight1'.*A(v,:);% edges from v
+    pf(:,v)=cross_weight2.*A(:,v);% edges to v
     % weighting cross edges
     map=[c(1:v-1);0;c(v:end)];
     [I J]=find(A);
     mask=((map(I)~=map(J)) & (map(I)~=0) & (map(J)~=0));
     I=I(mask);J=J(mask);
-    V=-cross_weight1(I).*cross_weight1(J);
+    V=-cross_weight1(I).*cross_weight2(J);
     pf=pf+sparse(I,J,V,n,n);
 else % handle non reducing case
     pf=pfaffian1_helper(A,not_checked);
@@ -128,7 +127,20 @@ elseif n==7 && nnz(A)==21 && ...
     pf=-A;
     return
 else
-   pf=A;     
+    T=trisectors(B);
+    if isempty(T)
+        [is_planar,~,embedding]=boyer_myrvold_planarity_test(B);
+        if(is_planar)
+            pf=planar_pfaffian(B,embedding);
+        else
+            disp('can not be expressed as trisum of planar brace')
+            pf=[];
+            return
+        end
+    else
+        error('not implemented')
+    end
 end
+% edges of M has weight -1
 pf=-diag(diag(pf))*pf;
 end
