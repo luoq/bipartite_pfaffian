@@ -5,7 +5,7 @@ while 1
     if isempty(P)
         continue
     end
-    if RNW_perm(A)~=abs(det(P))
+    if abs(RNW_perm(A)-abs(det(P)))>1e-12
         disp('find a wrong example')
         return
     end
