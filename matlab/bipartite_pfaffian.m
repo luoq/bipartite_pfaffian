@@ -133,19 +133,30 @@ elseif n==7 && nnz(A)==21 && ...
     return
 else
     T=trisectors(B);
-    if isempty(T)
-        [is_planar,~,embedding]=boyer_myrvold_planarity_test(B);
-        if(is_planar)
-            pf=planar_pfaffian(B,embedding);
-        else
-            disp('can not be expressed as trisum of planar brace')
-            pf=[];
-            return
-        end
-    else
-        error('not implemented')
+    pf=pfaffian2_helper(B,T);
+    if isempty(pf)
+        return
     end
+    pf=pf(1:n,n+1:2*n);
 end
 % edges of M has weight -1
 pf=-diag(diag(pf))*pf;
+end
+
+function pf=pfaffian2_helper(B,T)
+n=size(B,1);
+[is_planar,~,embedding]=boyer_myrvold_planarity_test(B);
+if(is_planar)
+    pf=planar_pfaffian(B,embedding);
+elseif isempty(T)
+    disp('can not be expressed as trisum of planar brace')
+    pf=[];
+    return
+elseif size(T,1)>n-5
+    disp('too much trisectors')
+    pf=[];
+    return
+else
+    error('not implemented')
+end
 end
