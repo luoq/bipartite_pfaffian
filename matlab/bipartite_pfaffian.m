@@ -1,7 +1,8 @@
-function pf=bipartite_pfaffian(A)
+function [pf no_match]=bipartite_pfaffian(A)
 % pf=bipartite_pfaffian(G) 
 % return half pfaffian of bipartite graph with biadjacent matrix A
 
+no_match=false;
 n=size(A,1);
 
 %% check existence of perfecting mathing.Contract along it if any
@@ -10,6 +11,7 @@ M=matching(G);M=M(1:n)-n; % find a maximal matching
 if sum(M>0)<n % no perfect matching
     disp('The permanent is 0')
     pf=sparse(n,n);
+    no_match=true;
     return
 end
 A=remove_diagonal_sp(A(:,M)); % contract along M
