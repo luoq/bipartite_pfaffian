@@ -98,8 +98,8 @@ if l>1 % handle reducing case
     pf=blkdiag(pfs{:},0);
     partition=[partition;v];% add v in permutation
     pf(partition,partition)=pf;
-    pf(v,:)=weight1'.*A(v,:);% edges from v,not hard to see the value recored
-    pf(:,v)=weight2.*A(:,v);% edges to v,not hard to see the value recored
+    pf(v,:)=weight1'.*A(v,:);% edges from v,not hard to see the value exists
+    pf(:,v)=weight2.*A(:,v);% edges to v,not hard to see the value exists
     pf(v,v)=-1;% edges in perfect matching always get -1
     % weighting cross edges
     map=[c(1:v-1);0;c(v:end)];
@@ -139,47 +139,49 @@ else
         pf=planar_pfaffian(B,embedding);
     else
         T=trisectors_modified(B);
-        pf=pfaffian2_helper(B,T);
+        T(:,3:4)=T(:,3:4)-n;%shit index of class B
+        pf=pfaffian2_helper(A,T);
         if isempty(pf)
             return
         end
     end
-    pf=pf(1:n,n+1:2*n);
 end
 % edges of M has weight -1
 pf=-diag(diag(pf))*pf;
 end
 
-function pf=pfaffian2_helper(B,T)
-n=size(B,1);p=n/2;%n must be even
-%If function is called recursively,the p-1:p,2p-1:2*p are the 4-cycle
+function pf=pfaffian2_helper(A,T)
+n=size(A,1);
+%If function is called recursively,the X_{n-1},Y_{n-1},X_n:Y_n are the 4-cycle
+B=biadjacency_to_adjacency(A);
 [is_planar,~,embedding]=boyer_myrvold_planarity_test(B);
 if(is_planar)
     pf=planar_pfaffian(B,embedding);
     if isempty(pf)
         return
     end
-    if p>2 && B(p-1,2*p-1) && B(p-1,2*p) && B(p,2*p-1) && B(p,2*p)
+    pf=pf(1:n,n+1:2*n);
+    if n>2 && A(n-1,n-1) && A(n-1,n) && A(n,n-1) && A(n,n)
         % result may be combined,orient it coordinately
-        % the circle C p-1,2*p-1,p,2*p must be evenly oriented
-        % convert it to 1 -1 -1 -1
-        if pf(p-1,2*p-1)~=1
-            pf(p-1,:)=-pf(p-1,:);pf(:,p-1)=-pf(:,p-1);
+        % the circle C X_{n-1},Y_{n-1},X_n:Y_n must be evenly oriented
+        % convert it to X_{n-1} --> Y_{n-1} <--X_n <-- B_n <--- 
+        if pf(n-1,n-1)~=1
+            pf(n-1,:)=-pf(n-1,:);
         end
-        if pf(2*p-1,p)~=-1
-             pf(2*p-1,:)=-pf(2*p-1,:);pf(:,2*p-1)=-pf(:,2*p-1);
+        if pf(n,n-1)~=1
+             pf(:,n-1)=-pf(:,n-1);
         end
-        if pf(p,2*p)~=-1
-             pf(p,:)=-pf(p,:);pf(:,p)=-pf(:,p);
+        if pf(n,n)~=-1
+             pf(n,:)=-pf(n,:);
         end
-        % now pf(2*p,p-1) must be -1 if the function is called recursively
+        % now pf(n-1,n) must be 1 because if the function is called recursively
         % then C must be oddly oriented
     end
 elseif isempty(T)
     disp('can not be expressed as trisum of planar brace')%empty T and not planar
     pf=[];
     return
-elseif size(T,1)>n-5
+elseif size(T,1)>2*n-5
     disp('too much trisectors by 8.9')
     pf=[];
     return
@@ -187,20 +189,25 @@ else
     t=T(1,:);
     T=T(2:end,:);
     
-    G_minor=minor(G,t);
-    [c,sizes]=components(G_minor);
-    mask=true(n,1);mask(t)=false;
-    label=zeros(n,1);label(mask)=c;
+    B_minor=minor(B,t);
+    [c,sizes]=components(B_minor);
+
+    mask=false(2*n);mask(t)=true;
+    label=zeros(2*n,1);label(~mask)=c;
+    label_r=label(1:n);label_c=label(n+1:2*n);
     l=length(sizes);
+    label(mask)=l+1;
+    [~,partition_r]=sort(label_r);
+    [~,partition_c]=sort(label_c);
     
     %compute the map from old index to index in component
-    old2new=zeros(n,1);
+    old2new_r=zeros(n,1);old2new_c=zeros(n,1);
     %The new index of vetices of C is negative to distinguish
     %value for other componets are computed when needed
-    old2new(label==0)=(-3):0;
+    old2new_r(label_r==l+1)=(-1):0;old2new_c(label_c==l+1)=(-1):0;
      
     % compute the component of each trisector
-    label_T=label(T);
+    label_T=[label_r(T(:,1:2)) label_c(:,3:4)];
     n_T=size(T,1);
     for i=1:n_T
         % Each trisector must have label>0 and this number is fixed by 8.6
@@ -210,27 +217,39 @@ else
  
     %divide and combine
     pfs=cell(l,1);
+    ns=sizes/2;
+    cross_r=pfs;cross_c=pfs;
+    first=1;
     for i=1:l
-        index_i=find(label==i);
-        p_i=sizes(i)/2;%sizes(i) must be even
-        Ai=[G(index_i(1:p_i),index_i(p_i+1:2*p_i)) G(index_i(1:p_i),t(3:4)); 
-            G(t(1:2),index_i(p_i+1:2*p_i)) ones(2,2)];
-        Ai=biadjacency_to_adjacency(Ai);
+        last=first+ns(i)-1;
+        Ai=A([partition_r(first:last);n-1;n],[partition_c(first:last);n-1;n]);
+        Ai(n-1:n,n-1:n)=zeros(2);
+          
         Ti=T(label_T==i,:);
         %compute the old2new map for component i
-        old2new(label==i)=1:sizes(i);
-        Ti=old2new(Ti);
-        i_mask=(Ti<=-2);
-        Ti(i_mask)=Ti(i_mask)+2+(p_i+2);
-        i_mask=(Ti==-1||Ti==0);
-        Ti(i_mask)=Ti(i_mask)+2*(p_i+2);
+        old2new_r(label==i)=1:ns(i);
+        old2new_c(label==i)=1:ns(i);
+        Ti=[old2new_r(Ti(:,1:2)),old2new_c(Ti(:,3:4))];
+        i_mask=(Ti<=0);
+        Ti(i_mask)=Ti(i_mask)+(ns{i}+2);
         Ti(:,1:2)=sort(Ti(:,1:2),2);
         Ti(:,3:4)=sort(Ti(:,3:4),2);
+        
         pfs{i}=pfaffian2_helper(Ai,Ti);
+        cross_r{i}=pfs{i}(ns(i)-1:ns(i),1:ns(i)-2);
+        cross_c{i}=pfs{i}(1:ns(i)-2,ns(i)-1:ns(i));
+        pfs{i}=pfs{i}(1:ns(i)-2,1:ns(i)-2);
         if isempty(pfs{i})
             pf=[];
             return
         end
     end
+    % The pfaffian orientation of four cycle
+    C=[1 1;1 -1];
+    C(A(t(1:2),t(3:4))==0)=0;
+    % construct result
+    pf=[blkdiag(pfs{:}) vertcat(cross_c{:});
+        horzcat(cross_r{:}) C];
+    pf(partition_r,partition_c)=pf;
 end
 end

@@ -1,0 +1,4 @@
+MATLAB NOTE
+
+1. Use [~,partition]=sort(...) to handle the partition of variables
+2. Use of X{:}
