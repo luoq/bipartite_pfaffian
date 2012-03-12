@@ -2,6 +2,7 @@ function [pf no_match]=bipartite_pfaffian(A)
 % pf=bipartite_pfaffian(G) 
 % return half pfaffian of bipartite graph with biadjacent matrix A
 
+save '/tmp/tmp.mat' A
 no_match=false;
 n=size(A,1);
 
@@ -139,6 +140,10 @@ else
         pf=planar_pfaffian(B,embedding);
     else
         T=trisectors_modified(B);
+        if isempty(T);
+            pf=[];
+            return
+        end
         T(:,3:4)=T(:,3:4)-n;%shit index of class B
         pf=pfaffian2_helper(A,T);
         if isempty(pf)
@@ -192,11 +197,11 @@ else
     B_minor=minor(B,t);
     [c,sizes]=components(B_minor);
 
-    mask=false(2*n);mask(t)=true;
+    mask=false(2*n,1);mask([t(1:2) t(3:4)+n])=true;
     label=zeros(2*n,1);label(~mask)=c;
-    label_r=label(1:n);label_c=label(n+1:2*n);
     l=length(sizes);
     label(mask)=l+1;
+    label_r=label(1:n);label_c=label(n+1:2*n);
     [~,partition_r]=sort(label_r);
     [~,partition_c]=sort(label_c);
     
@@ -207,13 +212,15 @@ else
     old2new_r(label_r==l+1)=(-1):0;old2new_c(label_c==l+1)=(-1):0;
      
     % compute the component of each trisector
-    label_T=[label_r(T(:,1:2)) label_c(:,3:4)];
-    n_T=size(T,1);
-    for i=1:n_T
-        % Each trisector must have label>0 and this number is fixed by 8.6
-        label_T(i,1)=label_T(i,find(label_T(i,1)>0,1));
+    if ~isempty(T)
+        label_T=[label_r(T(:,1:2)) label_c(:,3:4)];
+        n_T=size(T,1);
+        for i=1:n_T
+            % Each trisector must have label>0 and this number is fixed by 8.6
+            label_T(i,1)=label_T(i,find(label_T(i,1)>0,1));
+        end
+        label_T=label_T(:,1);
     end
-    label_T=label_T(:,1);
  
     %divide and combine
     pfs=cell(l,1);
@@ -224,25 +231,29 @@ else
         last=first+ns(i)-1;
         Ai=A([partition_r(first:last);n-1;n],[partition_c(first:last);n-1;n]);
         Ai(n-1:n,n-1:n)=zeros(2);
-          
-        Ti=T(label_T==i,:);
-        %compute the old2new map for component i
-        old2new_r(label==i)=1:ns(i);
-        old2new_c(label==i)=1:ns(i);
-        Ti=[old2new_r(Ti(:,1:2)),old2new_c(Ti(:,3:4))];
-        i_mask=(Ti<=0);
-        Ti(i_mask)=Ti(i_mask)+(ns{i}+2);
-        Ti(:,1:2)=sort(Ti(:,1:2),2);
-        Ti(:,3:4)=sort(Ti(:,3:4),2);
+        
+        if ~isempty(T)
+            Ti=T(label_T==i,:);
+            %compute the old2new map for component i
+            old2new_r(label==i)=1:ns(i);
+            old2new_c(label==i)=1:ns(i);
+            Ti=[old2new_r(Ti(:,1:2)),old2new_c(Ti(:,3:4))];
+            i_mask=(Ti<=0);
+            Ti(i_mask)=Ti(i_mask)+(ns{i}+2);
+            Ti(:,1:2)=sort(Ti(:,1:2),2);
+            Ti(:,3:4)=sort(Ti(:,3:4),2);
+        else
+            Ti=[];
+        end
         
         pfs{i}=pfaffian2_helper(Ai,Ti);
-        cross_r{i}=pfs{i}(ns(i)-1:ns(i),1:ns(i)-2);
-        cross_c{i}=pfs{i}(1:ns(i)-2,ns(i)-1:ns(i));
-        pfs{i}=pfs{i}(1:ns(i)-2,1:ns(i)-2);
         if isempty(pfs{i})
             pf=[];
             return
         end
+        cross_r{i}=pfs{i}(ns(i)-1:ns(i),1:ns(i)-2);
+        cross_c{i}=pfs{i}(1:ns(i)-2,ns(i)-1:ns(i));
+        pfs{i}=pfs{i}(1:ns(i)-2,1:ns(i)-2);
     end
     % The pfaffian orientation of four cycle
     C=[1 1;1 -1];
