@@ -120,12 +120,12 @@ global Heawood
 % handle 2-strongly-connected graph
 A=A+speye(size(A,1));
 B=biadjacency_to_adjacency(A);
-n=size(A,1);
-if n>=3 && nnz(A)>2*(2*n)-4
-    disp('No possible pfaffian orientation')
+n=size(A,1);N=2*n;
+if N>=3 && nnz(A)>2*N-4
+    disp('No possible pfaffian orientation by 7.3')
     pf=[];
     return
-elseif 2*n<=4 % B must be planar
+elseif N<=4 % B must be planar
      [~,~,embedding]=boyer_myrvold_planarity_test(B);
      pf=planar_pfaffian(B,embedding);
      pf=pf(1:n,n+1:2*n);
@@ -134,10 +134,15 @@ elseif n==7 && nnz(A)==21 && ...
     pf=-A;
     return
 else
-    T=trisectors(B);
-    pf=pfaffian2_helper(B,T);
-    if isempty(pf)
-        return
+    [is_planar,~,embedding]=boyer_myrvold_planarity_test(B);
+    if(is_planar)
+        pf=planar_pfaffian(B,embedding);
+    else
+        T=trisectors_modified(B);
+        pf=pfaffian2_helper(B,T);
+        if isempty(pf)
+            return
+        end
     end
     pf=pf(1:n,n+1:2*n);
 end
@@ -146,19 +151,86 @@ pf=-diag(diag(pf))*pf;
 end
 
 function pf=pfaffian2_helper(B,T)
-n=size(B,1);
+n=size(B,1);p=n/2;%n must be even
+%If function is called recursively,the p-1:p,2p-1:2*p are the 4-cycle
 [is_planar,~,embedding]=boyer_myrvold_planarity_test(B);
 if(is_planar)
     pf=planar_pfaffian(B,embedding);
+    if isempty(pf)
+        return
+    end
+    if p>2 && B(p-1,2*p-1) && B(p-1,2*p) && B(p,2*p-1) && B(p,2*p)
+        % result may be combined,orient it coordinately
+        % the circle C p-1,2*p-1,p,2*p must be evenly oriented
+        % convert it to 1 -1 -1 -1
+        if pf(p-1,2*p-1)~=1
+            pf(p-1,:)=-pf(p-1,:);pf(:,p-1)=-pf(:,p-1);
+        end
+        if pf(2*p-1,p)~=-1
+             pf(2*p-1,:)=-pf(2*p-1,:);pf(:,2*p-1)=-pf(:,2*p-1);
+        end
+        if pf(p,2*p)~=-1
+             pf(p,:)=-pf(p,:);pf(:,p)=-pf(:,p);
+        end
+        % now pf(2*p,p-1) must be -1 if the function is called recursively
+        % then C must be oddly oriented
+    end
 elseif isempty(T)
-    disp('can not be expressed as trisum of planar brace')
+    disp('can not be expressed as trisum of planar brace')%empty T and not planar
     pf=[];
     return
 elseif size(T,1)>n-5
-    disp('too much trisectors')
+    disp('too much trisectors by 8.9')
     pf=[];
     return
 else
-    error('not implemented')
+    t=T(1,:);
+    T=T(2:end,:);
+    
+    G_minor=minor(G,t);
+    [c,sizes]=components(G_minor);
+    mask=true(n,1);mask(t)=false;
+    label=zeros(n,1);label(mask)=c;
+    l=length(sizes);
+    
+    %compute the map from old index to index in component
+    old2new=zeros(n,1);
+    %The new index of vetices of C is negative to distinguish
+    %value for other componets are computed when needed
+    old2new(label==0)=(-3):0;
+     
+    % compute the component of each trisector
+    label_T=label(T);
+    n_T=size(T,1);
+    for i=1:n_T
+        % Each trisector must have label>0 and this number is fixed by 8.6
+        label_T(i,1)=label_T(i,find(label_T(i,1)>0,1));
+    end
+    label_T=label_T(:,1);
+ 
+    %divide and combine
+    pfs=cell(l,1);
+    for i=1:l
+        index_i=find(label==i);
+        p_i=sizes(i)/2;%sizes(i) must be even
+        Ai=[G(index_i(1:p_i),index_i(p_i+1:2*p_i)) G(index_i(1:p_i),t(3:4)); 
+            G(t(1:2),index_i(p_i+1:2*p_i)) ones(2,2)];
+        Ai=biadjacency_to_adjacency(Ai);
+        Ti=T(label_T==i,:);
+        %compute the old2new map for component i
+        old2new(label==i)=1:sizes(i);
+        Ti=old2new(Ti);
+        i_mask=(Ti<=-2);
+        Ti(i_mask)=Ti(i_mask)+2+(p_i+2);
+        i_mask=(Ti==-1||Ti==0);
+        Ti(i_mask)=Ti(i_mask)+2*(p_i+2);
+        Ti(:,1:2)=sort(Ti(:,1:2),2);
+        Ti(:,3:4)=sort(Ti(:,3:4),2);
+        pfs{i}=pfaffian2_helper(Ai,Ti);
+        if isempty(pfs{i})
+            pf=[];
+            return
+        end
+    end
 end
 end
