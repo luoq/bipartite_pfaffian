@@ -194,7 +194,7 @@ else
     t=T(1,:);
     T=T(2:end,:);
     
-    B_minor=minor(B,t);
+    B_minor=minor(B,[t(1:2) t(3:4)+n]);
     [c,sizes]=components(B_minor);
 
     mask=false(2*n,1);mask([t(1:2) t(3:4)+n])=true;
