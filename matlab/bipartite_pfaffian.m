@@ -199,7 +199,7 @@ else
 
     mask=false(2*n,1);mask([t(1:2) t(3:4)+n])=true;
     label=zeros(2*n,1);label(~mask)=c;
-    l=length(sizes);
+    l=length(sizes);%l>=3
     label(mask)=l+1;
     label_r=label(1:n);label_c=label(n+1:2*n);
     [~,partition_r]=sort(label_r);
@@ -229,8 +229,8 @@ else
     first=1;
     for i=1:l
         last=first+ns(i)-1;
-        Ai=A([partition_r(first:last);n-1;n],[partition_c(first:last);n-1;n]);
-        Ai(n-1:n,n-1:n)=zeros(2);
+        Ai=A([partition_r(first:last);t(1);t(2)],[partition_c(first:last);t(3);t(4)]);
+        Ai(end-1:end,end-1:end)=ones(2);
         
         if ~isempty(T)
             Ti=T(label_T==i,:);
