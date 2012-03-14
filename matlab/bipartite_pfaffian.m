@@ -168,23 +168,6 @@ if(is_planar)
         return
     end
     pf=pf(1:n,n+1:2*n);
-    if n>2 && A(n-1,n-1) && A(n-1,n) && A(n,n-1) && A(n,n)
-        % result may be combined,orient it coordinately
-        % the circle C X_{n-1},Y_{n-1},X_n:Y_n must be evenly oriented
-        % convert it to X_{n-1} --> Y_{n-1} <--X_n <-- X_n <--- 
-        % the pf is [1 1;1 -1]
-        if pf(n-1,n-1)~=1
-            pf(:,n-1)=-pf(:,n-1);
-        end
-        if pf(n,n-1)~=1
-             pf(n,:)=-pf(n,:);
-        end
-        if pf(n,n)~=-1
-             pf(:,n)=-pf(:,n);
-        end
-        % now pf(n-1,n) must be 1 because if the function is called recursively
-        % then C must be oddly oriented
-    end
 elseif isempty(T)
     disp('can not be expressed as trisum of planar brace')%empty T and not planar
     pf=[];
@@ -222,8 +205,8 @@ else
         label_T=[reshape(label_r(T(:,1:2)),m,2) reshape(label_c(T(:,3:4)),m,2)];
         n_T=size(T,1);
         for i=1:n_T
-            % Each trisector must have label>0 and this number is fixed by 8.6
-            label_T(i,1)=label_T(i,find(label_T(i,1)>0,1));
+            % Each trisector must have the same label<=l+1 by 8.6
+            label_T(i,1)=label_T(i,find(label_T(i,:)<=l,1));
         end
         label_T=label_T(:,1);
     end
@@ -241,12 +224,13 @@ else
         if ~isempty(T)
             Ti=T(label_T==i,:);
             %compute the old2new map for component i
-            old2new_r(label==i)=1:ns(i);
-            old2new_c(label==i)=1:ns(i);
-            Ti=[old2new_r(Ti(:,1:2)),old2new_c(Ti(:,3:4))];
+            old2new_r(label_r==i)=1:ns(i);
+            old2new_c(label_c==i)=1:ns(i);
+            m=size(Ti,1);
+            Ti=[reshape(old2new_r(Ti(:,1:2)),m,2) reshape(old2new_c(Ti(:,3:4)),m,2)];
             i_mask=(Ti<=0);
             if ~isempty(i_mask)
-                Ti(i_mask)=Ti(i_mask)+(ns{i}+2);
+                Ti(i_mask)=Ti(i_mask)+(ns(i)+2);
             end
             Ti(:,1:2)=sort(Ti(:,1:2),2);
             Ti(:,3:4)=sort(Ti(:,3:4),2);
@@ -259,6 +243,23 @@ else
             pf=[];
             return
         end
+        
+        % orient the cycle in fixed way
+        % the circle C X_{n-1},Y_{n-1},X_n:Y_n must be evenly oriented
+        % convert it to X_{n-1} --> Y_{n-1} <--X_n <-- X_n <--- 
+        % the pf is [1 1;1 -1]
+        if pfs{i}(end-1,end-1)~=1
+            pfs{i}(:,end-1)=-pfs{i}(:,end-1);
+        end
+        if pfs{i}(end,end-1)~=1
+             pfs{i}(end,:)=-pfs{i}(end,:);
+        end
+        if pfs{i}(end,end)~=-1
+             pfs{i}(:,end)=-pfs{i}(:,end);
+        end
+        % now pf(n-1,n) must be 1 because if the function is called recursively
+        % then C must be oddly oriented
+        
         cross_r{i}=pfs{i}(ns(i)+1:ns(i)+2,1:ns(i));
         cross_c{i}=pfs{i}(1:ns(i),ns(i)+1:ns(i)+2);
         pfs{i}=pfs{i}(1:ns(i),1:ns(i));

@@ -1,5 +1,5 @@
 function check_pfaffian2
-k=7;
+k=5;
 %% test 1
 A=generate_matrix1(k);
 P=bipartite_pfaffian(A(randperm(2*k+2),randperm(2*k+2)));
@@ -30,19 +30,20 @@ if abs(perm-abs(det(P)))<1e-12
 else
     disp(':-(')
 end
-% %% test 4
-% k=4;
-% X1=generate_matrix1(k);
-% X2=X1;
-% A=glue(X1,[1 2*k+1;1 2*k+1],X2,[1 2*k+1;1 2*k+1]);
-% P=bipartite_pfaffian(A);
-% perm=Heperm(A);
-% fprintf('test 3. perm=%d',perm)
-% if abs(perm-abs(det(P)))<1e-12
-%     disp(':-)')
-% else
-%     disp(':-(')
-% end
+%% test 4
+k=3;
+X1=generate_matrix1(k);
+X2=X1;
+A=glue(X1,[1 2*k+1;1 2*k+1],X2,[1 2*k+1;1 2*k+1]);
+%P=bipartite_pfaffian(A(randperm(size(A,1)),randperm(size(A,1))));
+P=bipartite_pfaffian(A);
+perm=Heperm(A);
+fprintf('test 4. perm=%d',perm)
+if abs(perm-abs(det(P)))<1e-12
+    disp(':-)')
+else
+    disp(':-(')
+end
 end
 
 function A=generate_matrix1(k)
