@@ -13,7 +13,7 @@ while isempty(P)||no_match
         error('invalid method')
     end    
     [P no_match]=bipartite_pfaffian(A);
-    if abs(RNW_perm(A)-abs(det(P)))>1e-12
+    if ~isempty(P) && ~no_match && abs(Heperm(A)-abs(det(P)))>1e-12
         disp(':-( something bad happened')
     end
 end

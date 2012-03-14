@@ -262,6 +262,7 @@ else
         cross_r{i}=pfs{i}(ns(i)+1:ns(i)+2,1:ns(i));
         cross_c{i}=pfs{i}(1:ns(i),ns(i)+1:ns(i)+2);
         pfs{i}=pfs{i}(1:ns(i),1:ns(i));
+        first=last+1;
     end
     % The pfaffian orientation of four cycle
     C=[1 1;1 -1];
