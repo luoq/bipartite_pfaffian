@@ -2,7 +2,6 @@ function [pf no_match]=bipartite_pfaffian(A)
 % pf=bipartite_pfaffian(G) 
 % return half pfaffian of bipartite graph with biadjacent matrix A
 
-save '/tmp/tmp.mat' A
 no_match=false;
 n=size(A,1);
 
