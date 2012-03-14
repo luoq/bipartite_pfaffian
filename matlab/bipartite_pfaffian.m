@@ -10,8 +10,8 @@ n=size(A,1);
 G=biadjacency_to_adjacency(A);
 M=matching(G);M=M(1:n)-n; % find a maximal matching
 if sum(M>0)<n % no perfect matching
-    disp('The permanent is 0')
-    pf=sparse(n,n);
+    disp('trival:no perfect matching')
+    pf=A;
     no_match=true;
     return
 end
@@ -138,8 +138,10 @@ else
     [is_planar,~,embedding]=boyer_myrvold_planarity_test(B);
     if(is_planar)
         pf=planar_pfaffian(B,embedding);
+        pf=pf(1:n,n+1:2*n);
     else
         T=trisectors_modified(B);
+        disp('no trisector and not planar or Heawood')
         if isempty(T);
             pf=[];
             return
@@ -213,7 +215,10 @@ else
      
     % compute the component of each trisector
     if ~isempty(T)
-        label_T=[label_r(T(:,1:2)) label_c(:,3:4)];
+        m=size(T,1);
+        % note this FEATURE size(label_T(1:2))=(2,1)=size(label_T((1:2)')))
+        % size(label_T(ones(m,n)))=(m,n)
+        label_T=[reshape(label_r(T(:,1:2)),m,2) reshape(label_c(T(:,3:4)),m,2)];
         n_T=size(T,1);
         for i=1:n_T
             % Each trisector must have label>0 and this number is fixed by 8.6
@@ -239,7 +244,9 @@ else
             old2new_c(label==i)=1:ns(i);
             Ti=[old2new_r(Ti(:,1:2)),old2new_c(Ti(:,3:4))];
             i_mask=(Ti<=0);
-            Ti(i_mask)=Ti(i_mask)+(ns{i}+2);
+            if ~isempty(i_mask)
+                Ti(i_mask)=Ti(i_mask)+(ns{i}+2);
+            end
             Ti(:,1:2)=sort(Ti(:,1:2),2);
             Ti(:,3:4)=sort(Ti(:,3:4),2);
         else
