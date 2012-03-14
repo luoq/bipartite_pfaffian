@@ -141,8 +141,8 @@ else
         pf=pf(1:n,n+1:2*n);
     else
         T=trisectors_modified(B);
-        disp('no trisector and not planar or Heawood')
         if isempty(T);
+            disp('no trisector and not planar or Heawood')
             pf=[];
             return
         end
@@ -171,15 +171,16 @@ if(is_planar)
     if n>2 && A(n-1,n-1) && A(n-1,n) && A(n,n-1) && A(n,n)
         % result may be combined,orient it coordinately
         % the circle C X_{n-1},Y_{n-1},X_n:Y_n must be evenly oriented
-        % convert it to X_{n-1} --> Y_{n-1} <--X_n <-- B_n <--- 
+        % convert it to X_{n-1} --> Y_{n-1} <--X_n <-- X_n <--- 
+        % the pf is [1 1;1 -1]
         if pf(n-1,n-1)~=1
-            pf(n-1,:)=-pf(n-1,:);
+            pf(:,n-1)=-pf(:,n-1);
         end
         if pf(n,n-1)~=1
-             pf(:,n-1)=-pf(:,n-1);
+             pf(n,:)=-pf(n,:);
         end
         if pf(n,n)~=-1
-             pf(n,:)=-pf(n,:);
+             pf(:,n)=-pf(:,n);
         end
         % now pf(n-1,n) must be 1 because if the function is called recursively
         % then C must be oddly oriented
@@ -258,9 +259,9 @@ else
             pf=[];
             return
         end
-        cross_r{i}=pfs{i}(ns(i)-1:ns(i),1:ns(i)-2);
-        cross_c{i}=pfs{i}(1:ns(i)-2,ns(i)-1:ns(i));
-        pfs{i}=pfs{i}(1:ns(i)-2,1:ns(i)-2);
+        cross_r{i}=pfs{i}(ns(i)+1:ns(i)+2,1:ns(i));
+        cross_c{i}=pfs{i}(1:ns(i),ns(i)+1:ns(i)+2);
+        pfs{i}=pfs{i}(1:ns(i),1:ns(i));
     end
     % The pfaffian orientation of four cycle
     C=[1 1;1 -1];
