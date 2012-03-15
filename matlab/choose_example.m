@@ -7,7 +7,7 @@ while isempty(P)||no_match
     elseif method==2
         A=sparse(n,n);
         for i=1:n
-            A(i,:)=rand_choose(n,k);
+            A(i,:)=chooseKfromN(n,k);
         end
     elseif method==3
         A=regularMatrix(n,k);
