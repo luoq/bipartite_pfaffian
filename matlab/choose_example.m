@@ -9,6 +9,8 @@ while isempty(P)||no_match
         for i=1:n
             A(i,:)=rand_choose(n,k);
         end
+    elseif method==3
+        A=regularMatrix(n,k);
     else
         error('invalid method')
     end    

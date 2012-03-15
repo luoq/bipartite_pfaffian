@@ -1,4 +1,4 @@
-function x=rand_choose(n,k)
+function x=chooseKfromN(n,k)
 %% randomly choose k from n
 %% x is a 0-1 vector of size n,where 1 means chosen
 x=zeros(1,n);
