@@ -1,4 +1,12 @@
 function q=bilayer(m,n,p,R)
+% Link two m*n grid graph by connecting corresponding vertices with
+% probability p to get a new matrix, check if it has a pfaffian
+% orientation. Repeat this R times, return the fraction of new matrices
+% with a pfaffian orientation.
+% p may be an array.
+
+% Explanation for code.
+
 L=grid_graph(m,n);
 Color=grid_graph_color_class(m,n);
 A=L(Color==1,Color==-1);

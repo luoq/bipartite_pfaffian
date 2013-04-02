@@ -1,4 +1,5 @@
 function check_pfaffian2(id,k)
+% check the bipartite_pfaffian program
 if id==1
     %% test 1
     A=matrix1(k);
