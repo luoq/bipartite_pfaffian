@@ -1,13 +1,13 @@
-function [pf no_match]=bipartite_pfaffian(A)
+function [pf, no_match]=bipartite_pfaffian(A)
 % pf=bipartite_pfaffian(G) 
 % return half pfaffian of bipartite graph with biadjacent matrix A
 
 no_match=false;
 n=size(A,1);
 
-%% check existence of perfecting mathing.Contract along it if any
+%% check existence of perfecting mathing. Contract along it if any
 G=biadjacency_to_adjacency(A);
-M=matching(G);M=M(1:n)-n; % find a maximal matching
+M=matching(G);M=M(1:n)-n; % find a maximum matching
 if sum(M>0)<n % no perfect matching
     disp('trival:no perfect matching')
     pf=A;
@@ -17,7 +17,7 @@ end
 A=remove_diagonal_sp(A(:,M)); % contract along M
 
 %% convert to strong connected digraph
-[c sizes]=components(A);
+[c, sizes]=components(A);
 l=length(sizes);
 if l==1
     pf=pfaffian1(A);
@@ -71,8 +71,8 @@ if l>1 % handle reducing case
     partition(mask)=partition(mask)+1;
     
     pfs=cell(1,l);
-    weight1=zeros(n,1);
-    weight2=zeros(n,1);
+    weight1=zeros(n,1);%out
+    weight2=zeros(n,1);%in
     first=1;
     for i=1:l
         last=first+sizes(i)-1;
@@ -103,7 +103,7 @@ if l>1 % handle reducing case
     pf(v,v)=-1;% edges in perfect matching always get -1
     % weighting cross edges
     map=[c(1:v-1);0;c(v:end)];
-    [I J]=find(A);
+    [I, J]=find(A);
     mask=((map(I)~=map(J)) & (map(I)~=0) & (map(J)~=0));
     I=I(mask);J=J(mask);
     % It's easy to see for cross edge (u,v),weight2(u) and weight1(v) must
@@ -122,7 +122,7 @@ A=A+speye(size(A,1));
 B=biadjacency_to_adjacency(A);
 n=size(A,1);N=2*n;
 if N>=3 && nnz(A)>2*N-4
-    disp('No possible pfaffian orientation by 7.3')
+    disp('No pfaffian orientation by 7.3')
     pf=[];
     return
 elseif N<=4 % B must be planar

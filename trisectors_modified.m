@@ -34,7 +34,8 @@ for i=1:p
                     end
                 end
             else %len==1
-                [a C]=biconnected_components(G1);
+                [a, C]=biconnected_components(G1);
+                a=unique(a);% a has duplicated vertices ??
                 a=a(a>k-3);
                 if ~isempty(a)
                     for l=a'

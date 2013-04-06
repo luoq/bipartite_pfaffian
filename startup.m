@@ -1,5 +1,5 @@
+addpath('../calculation/matlab/')
 format compact
-format rat
 global Heawood
 Heawood=[
     1 1 0 0 0 1 0;
