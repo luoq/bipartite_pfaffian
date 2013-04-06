@@ -119,55 +119,40 @@ function pf=pfaffian2(A)
 global Heawood
 % handle 2-strongly-connected graph
 A=A+speye(size(A,1));
-B=biadjacency_to_adjacency(A);
 n=size(A,1);N=2*n;
 if N>=3 && nnz(A)>2*N-4
     disp('No pfaffian orientation by 7.3')
     pf=[];
     return
-elseif N<=4 % B must be planar
-     [~,~,embedding]=boyer_myrvold_planarity_test(B);
-     pf=planar_pfaffian(B,embedding);
-     pf=pf(1:n,n+1:2*n);
 elseif n==7 && nnz(A)==21 && ...
-        graphisomorphism(B,biadjacency_to_adjacency(Heawood),'Directed',false)
+        graphisomorphism(biadjacency_to_adjacency(A),biadjacency_to_adjacency(Heawood),'Directed',false)
     pf=-A;
     return
 else
-    [is_planar,~,embedding]=boyer_myrvold_planarity_test(B);
-    if(is_planar)
-        pf=planar_pfaffian(B,embedding);
-        pf=pf(1:n,n+1:2*n);
-    else
-        T=trisectors_modified(B);
-        if isempty(T);
-            disp('no trisector and not planar or Heawood')
-            pf=[];
-            return
-        end
-        T(:,3:4)=T(:,3:4)-n;%shit index of class B
-        pf=pfaffian2_helper(A,T);
-        if isempty(pf)
-            return
-        end
+    pf=pfaffian2_helper(A,[],true);
+    if isempty(pf)
+        return
     end
 end
 % edges of M has weight -1
 pf=-diag(diag(pf))*pf;
 end
 
-function pf=pfaffian2_helper(A,T)
+function pf=pfaffian2_helper(A,T,toplevel)
 n=size(A,1);
 %If function is called recursively,the X_{n-1},Y_{n-1},X_n:Y_n are the 4-cycle
 B=biadjacency_to_adjacency(A);
 [is_planar,~,embedding]=boyer_myrvold_planarity_test(B);
 if(is_planar)
     pf=planar_pfaffian(B,embedding);
-    if isempty(pf)
-        return
-    end
     pf=pf(1:n,n+1:2*n);
-elseif isempty(T)
+    return
+end
+if toplevel
+    T=trisectors_modified(B);
+    T(:,3:4)=T(:,3:4)-n;
+end
+if isempty(T)
     disp('can not be expressed as trisum of planar brace')%empty T and not planar
     pf=[];
     return
@@ -181,7 +166,7 @@ else
     
     B_minor=minor(B,[t(1:2) t(3:4)+n]);
     [c,sizes]=components(B_minor);
-
+    
     mask=false(2*n,1);mask([t(1:2) t(3:4)+n])=true;
     label=zeros(2*n,1);label(~mask)=c;
     l=length(sizes);%l>=3
@@ -195,7 +180,7 @@ else
     %The new index of vetices of C is negative to distinguish
     %value for other componets are computed when needed
     old2new_r(label_r==l+1)=(-1):0;old2new_c(label_c==l+1)=(-1):0;
-     
+    
     % compute the component of each trisector
     if ~isempty(T)
         m=size(T,1);
@@ -209,7 +194,7 @@ else
         end
         label_T=label_T(:,1);
     end
- 
+    
     %divide and combine
     pfs=cell(l,1);
     ns=sizes/2;
@@ -237,7 +222,7 @@ else
             Ti=[];
         end
         
-        pfs{i}=pfaffian2_helper(Ai,Ti);
+        pfs{i}=pfaffian2_helper(Ai,Ti,false);
         if isempty(pfs{i})
             pf=[];
             return
@@ -245,16 +230,16 @@ else
         
         % orient the cycle in fixed way
         % the circle C X_{n-1},Y_{n-1},X_n:Y_n must be evenly oriented
-        % convert it to X_{n-1} --> Y_{n-1} <--X_n <-- X_n <--- 
+        % convert it to X_{n-1} --> Y_{n-1} <--X_n <-- Y_n <---
         % the pf is [1 1;1 -1]
         if pfs{i}(end-1,end-1)~=1
             pfs{i}(:,end-1)=-pfs{i}(:,end-1);
         end
         if pfs{i}(end,end-1)~=1
-             pfs{i}(end,:)=-pfs{i}(end,:);
+            pfs{i}(end,:)=-pfs{i}(end,:);
         end
         if pfs{i}(end,end)~=-1
-             pfs{i}(:,end)=-pfs{i}(:,end);
+            pfs{i}(:,end)=-pfs{i}(:,end);
         end
         % now pf(n-1,n) must be 1 because if the function is called recursively
         % then C must be oddly oriented
