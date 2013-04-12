@@ -150,6 +150,11 @@ if(is_planar)
 end
 if toplevel
     T=trisectors_modified(B);
+    if isempty(T)
+        disp('can not be expressed as trisum of planar brace')%empty T and not planar
+        pf=[];
+        return
+    end
     T(:,3:4)=T(:,3:4)-n;
 end
 if isempty(T)
