@@ -186,7 +186,7 @@ else
     %value for other componets are computed when needed
     old2new_r(label_r==l+1)=(-1):0;old2new_c(label_c==l+1)=(-1):0;
     
-    % compute the component of each trisector
+    % compute the component each trisector belongs to
     if ~isempty(T)
         m=size(T,1);
         % note this FEATURE size(label_T(1:2))=(2,1)=size(label_T((1:2)')))
@@ -194,8 +194,15 @@ else
         label_T=[reshape(label_r(T(:,1:2)),m,2) reshape(label_c(T(:,3:4)),m,2)];
         n_T=size(T,1);
         for i=1:n_T
-            % Each trisector must have the same label<=l+1 by 8.6
-            label_T(i,1)=label_T(i,find(label_T(i,:)<=l,1));
+            % Each trisector must have the same label<=l or is not pfaffian by 8.6
+            label_T_i = label_T(i,:);
+            label_T_i = unique(label_T_i(label_T_i<=l));
+            if length(label_T_i)~=1
+                pf=[];
+                disp('trisector across multiple components(8.6)')
+                return
+            end
+            label_T(i,1)=label_T_i(1);
         end
         label_T=label_T(:,1);
     end
