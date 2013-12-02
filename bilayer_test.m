@@ -5,10 +5,10 @@ A=L(Color==1,Color==-1);
 B0=blkdiag(A,A');
 N=m*n;N1=sum(Color==1);N2=N-N1;
 
-res=zeros(R,2);
 I=1:N;
 J=[N1+(1:N2) 1:N1];
-for i=1:R
+parfor i=1:R
+    fprintf('----\n')
     x=rand(1,N);
     [~, order]=sort(x);
     low=1;high=N; % low statisfy P, high+1 not satisfy P(?)
@@ -22,5 +22,10 @@ for i=1:R
             low=j;
         end
     end
-    res(i,1)=low;res(i,2)=x(order(low));
+    n(i)=low;
+    p(i)=x(order(low));
+%     if mod(i,10)==1
+%         save('tmp.mat','res')
+%     end
 end
+res=[n' p'];
