@@ -241,7 +241,7 @@ else
         end
         
         % orient the cycle in fixed way
-        % the circle C X_{n-1},Y_{n-1},X_n:Y_n must be evenly oriented
+        % the circle C X_{n-1},Y_{n-1},X_n:Y_n must be oddly oriented
         % convert it to X_{n-1} --> Y_{n-1} <--X_n <-- Y_n <---
         % the pf is [1 1;1 -1]
         if pfs{i}(end-1,end-1)~=1
